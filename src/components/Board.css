@@ -1,0 +1,23 @@
+.board {
+  position: relative;
+  height: 100%;
+  /* Not `hidden`, which the browser still scrolls to reveal a caret or a focused control. */
+  overflow: clip;
+  /* Keeps the notes' z-index values from competing with anything outside the board. */
+  isolation: isolate;
+  user-select: none;
+  touch-action: none;
+}
+
+.board__hint {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  margin: 0;
+  color: var(--chalk-muted);
+  font-size: 18px;
+  line-height: 1.7;
+  text-align: center;
+  pointer-events: none;
+}

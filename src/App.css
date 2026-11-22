@@ -1,0 +1,39 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.app__main {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  background-color: var(--mat);
+  /* A 20px grid with a heavier line every 100px, to judge sizes and positions by. */
+  background-image:
+    linear-gradient(var(--mat-line-major) 1px, transparent 1px),
+    linear-gradient(90deg, var(--mat-line-major) 1px, transparent 1px),
+    linear-gradient(var(--mat-line-minor) 1px, transparent 1px),
+    linear-gradient(90deg, var(--mat-line-minor) 1px, transparent 1px);
+  background-size:
+    100px 100px,
+    100px 100px,
+    20px 20px,
+    20px 20px;
+}
+
+.app__message {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 14px;
+  margin: 0;
+  color: var(--chalk-muted);
+  font-size: 18px;
+}
+
+.app__message p {
+  margin: 0;
+}

@@ -1,0 +1,108 @@
+:root {
+  /* The board is a cutting mat; everything on it is paper, ink or chalk. */
+  --mat: #1f5c53;
+  --mat-deep: #174740;
+  --mat-shadow: #0f302b;
+  --mat-line-minor: rgb(255 255 255 / 0.055);
+  --mat-line-major: rgb(255 255 255 / 0.13);
+  --chalk: #f1f7f3;
+  --chalk-muted: rgb(241 247 243 / 0.7);
+  --ink: #1c2b4a;
+  --ink-muted: rgb(28 43 74 / 0.5);
+  --danger: #f2513f;
+
+  --font-ui: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-note: 'Shantell Sans Variable', var(--font-ui);
+
+  /* Notes stack with small z-index values that grow by one each time a note is raised. */
+  --z-trash: 2147483646;
+  --z-lifted: 2147483647;
+}
+
+[data-color='yellow'] {
+  --paper: #ffe566;
+}
+[data-color='orange'] {
+  --paper: #ffbb6b;
+}
+[data-color='pink'] {
+  --paper: #ffa3c4;
+}
+[data-color='purple'] {
+  --paper: #cbb5ff;
+}
+[data-color='blue'] {
+  --paper: #9fd6ff;
+}
+[data-color='green'] {
+  --paper: #b9ec8f;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+html {
+  /* The page never scrolls, so a sideways trackpad swipe must not navigate back either. */
+  overscroll-behavior: none;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  background: var(--mat-deep);
+  color: var(--chalk);
+  font-family: var(--font-ui);
+  font-size: 15px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+}
+
+.button {
+  padding: 5px 14px;
+  border: 1.5px solid currentColor;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--chalk);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.button:hover {
+  background: rgb(255 255 255 / 0.14);
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--chalk);
+  outline-offset: 2px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
