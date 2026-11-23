@@ -1,93 +1,34 @@
 # Sticky notes
 
-A single-page sticky-notes board built with TypeScript and React. Draw notes on a board, write on
-them, move, resize, recolor and stack them, and drag them to the trash. Every change is saved
-through an asynchronous, REST-shaped API and restored on reload.
+A single-page sticky-notes board built with TypeScript and React, without UI kits, drag-and-drop
+libraries or state-management libraries. You can create, move, resize and delete notes, and also
+write on them, bring them to the front, recolor them and keep them across reloads through a mocked
+REST API.
 
-No UI kit, drag-and-drop library or state-management library is used. The only runtime
-dependencies are React, `classnames` and a self-hosted font (Shantell Sans).
+## Running it
 
-- [Getting started](#getting-started)
-- [Features](#features)
-- [Project structure](#project-structure)
-- [Architecture](#architecture)
-- [Design decisions](#design-decisions)
-- [Testing](#testing)
-- [Known limitations and next steps](#known-limitations-and-next-steps)
-
-## Getting started
-
-**Requirements:** Node.js 22.12 or newer (required by Vite 8 and Vitest 5).
+Requires Node.js 22.12 or newer.
 
 ```sh
 npm install
-npm run dev
+npm run dev     # http://localhost:5173
+npm test        # unit tests
 ```
 
-Then open <http://localhost:5173>.
+Open <http://localhost:5173/?flaky> to make a third of the API requests fail and see the error
+handling.
 
-| Script              | What it does                                     |
-| ------------------- | ------------------------------------------------ |
-| `npm run dev`       | Starts the development server                    |
-| `npm run build`     | Type-checks and builds for production to `dist/` |
-| `npm run preview`   | Serves the production build locally              |
-| `npm test`          | Runs the unit tests once with Vitest             |
-| `npm run typecheck` | Runs the TypeScript compiler without emitting    |
-| `npm run lint`      | Lints with oxlint                                |
-| `npm run format`    | Formats the code with Prettier                   |
+## How to use it
 
-### Simulating a flaky network
+- **Create:** drag on an empty part of the board to draw a note, or type a size and position into
+  the top bar and press **Add note**.
+- **Move:** drag a note by its top strip.
+- **Resize:** drag any edge or corner.
+- **Delete:** drag a note onto the trash zone at the bottom. It can be undone for seven seconds.
+- **Bring to front:** press on a note or focus it with the keyboard.
+- **Recolor:** use the swatches in the top bar or along the bottom of a note.
 
-Open <http://localhost:5173/?flaky> to make a third of the mocked API requests fail. This is the
-quickest way to see the error handling: a failed load offers to try again, and a failed save keeps
-your changes on screen and offers to send them again.
-
-## Features
-
-### Creating a note
-
-- **Draw it:** drag on an empty part of the board. The rectangle you draw becomes the note, and a
-  live preview shows its size in pixels. The board has a grid line every 20 px and a heavier one
-  every 100 px to help with sizing.
-- **Type it:** enter a width, height, X and Y in the top bar and press **Add note**. The note gets
-  exactly that size, with its top-left corner at that position. If a note is selected, press
-  **New note** first.
-
-A new note gets keyboard focus straight away, so you can start typing.
-
-### Moving
-
-Drag a note by the strip along its top edge. A note stops at the edges of the board and cannot be
-dragged off it. To move it precisely, select the note, type X and Y in the top bar and press Enter
-or **Apply**.
-
-### Resizing
-
-Drag any edge or corner of a note, or select it and type W and H in the top bar. Notes cannot be
-smaller than 160 × 120 px or larger than the board.
-
-### Deleting
-
-Drag a note onto the trash zone at the bottom of the board and release it. Both the zone and the
-note change their appearance when releasing would delete, and an **Undo** button is shown for seven
-seconds afterwards.
-
-### Text, stacking and colors
-
-- **Text:** click into a note and type.
-- **Bring to front:** pressing on a note, or moving keyboard focus into it, raises it above the
-  others.
-- **Colors:** the swatches in the top bar recolor the selected note, or set the color for new notes
-  when nothing is selected. Each note also has its own swatches along its bottom edge, shown while
-  the note is hovered or focused.
-
-### Saving
-
-Every change is saved through an asynchronous API. The top bar shows whether all changes are saved,
-a save is in progress, or a save failed (with a **Try again** button). The API is mocked in the
-browser and stores its data in `localStorage`, so your notes survive a reload.
-
-Press **Escape** at any time to cancel the drag in progress.
+Escape cancels any drag in progress.
 
 ## Project structure
 
@@ -125,117 +66,53 @@ src/
     └── UndoToast/        The undo prompt after a deletion
 ```
 
-## Architecture
+## Layers
 
-### Layers
-
-The code is split into layers that depend on each other in one direction only:
+The layers depend on each other in one direction only, from the bottom up:
 
 1. **`utils`** holds generic helpers. All the rules about positions and sizes live in
    `geometry.ts` as pure functions, so they are unit-tested without a browser.
 2. **`domain`** holds the `Note` type and its constraints.
-3. **`state/notes`** holds a reducer that is the single source of truth. Components never mutate
+3. **`api` and `sync`** handle persistence. The engine knows nothing about React, and `main.tsx` is
+   the only file that knows the API is a mock, so a real backend can be swapped in there.
+4. **`state/notes`** holds a reducer that is the single source of truth. Components never mutate
    notes; they dispatch actions such as `noteAdded(id, rect, color)` or `noteRaised(id)`.
-4. **`components`** are thin views on top. `App` owns what the top bar and the board share: the
+5. **`components`** are thin views on top. `App` owns what the top bar and the board share: the
    board size, the selection, the color for new notes and note creation.
 
-### Gestures and performance
+## Approach
 
-Drawing, moving and resizing are all built on one hook, `usePointerDrag`. When a gesture starts, it
-adds `pointermove`, `pointerup` and `pointercancel` listeners to `window`, so the drag keeps
-following the pointer wherever it goes. It also cancels the drag on Escape, on a context menu or
-when the window loses focus, because any of those can swallow the `pointerup` and leave a note
-stuck to the pointer. Pointer capture is requested as well, so other elements show no hover effects
-during a drag, but nothing depends on it: Chrome on a macOS trackpad can drop capture in the middle
-of a drag.
+**One drag primitive for all gestures.** Drawing, moving and resizing are built on a single hook,
+`usePointerDrag`. It listens on `window` while a drag is running, so the drag survives the pointer
+leaving the element. It cancels on Escape, a context menu or the window losing focus, so a note is
+never left stuck to the pointer.
 
-Rendering is kept cheap in four ways:
+**Cheap rendering.** While a gesture runs, its geometry stays in the local state of the one note
+involved, and the reducer is updated once, on release. Notes are memoized and positioned with
+`transform`. Stacking uses a per-note `z` value instead of the array order, so raising a note never
+reorders DOM nodes.
 
-- While a gesture is running, its geometry lives in the local state of the one component involved,
-  so each pointer move re-renders exactly one note. The reducer is told the result once, on
-  release.
-- `NoteView` is memoized, and the reducer keeps untouched notes identical, so committing a change
-  re-renders only the note that changed.
-- Notes are positioned with `transform`, which keeps moving them out of layout.
-- Stacking order is a per-note `z` counter rather than the order of the array, so raising a note
-  changes one `z-index` and never reorders DOM nodes, which would drop focus and pointer capture.
+**Sync by difference, not by action.** The API is a small REST-shaped interface (`list`, `save`,
+`remove`) with a mock backed by `localStorage`. A sync engine compares the local notes with what the
+server has confirmed and sends only the difference, debounced and one batch at a time. That makes
+the UI optimistic, turns typing into one request, and makes retrying trivial: a failed request is
+simply still part of the next difference. Ids are generated on the client, so every request is
+idempotent and safe to repeat.
 
-### Persistence and sync
+## Key decisions
 
-Persistence sits behind a small `NotesApi` interface shaped like a REST resource:
+- **The board fits the window.** Notes always stay inside it. If the window shrinks, notes are
+  shown at the nearest visible position, but their stored positions are kept.
+- **Deleting needs no exact aim.** Releasing a note while any part of it overlaps the trash zone
+  deletes it. The zone turns red first, and every deletion can be undone.
+- **Stored data is untrusted.** Notes read from storage are validated, and malformed entries are
+  dropped.
+- **No edit is lost on reload.** Unsaved changes are sent when the page is hidden.
 
-| Method       | REST equivalent     | Behavior                                       |
-| ------------ | ------------------- | ---------------------------------------------- |
-| `list()`     | `GET /notes`        | Returns all notes                              |
-| `save(note)` | `PUT /notes/:id`    | Creates or replaces a note                     |
-| `remove(id)` | `DELETE /notes/:id` | Deletes a note; succeeds if it is already gone |
+## Limitations and next steps
 
-Between the reducer and the API sits a sync engine (`sync/notesSync.ts`). Instead of turning each
-action into a request, it compares the current notes with what the server has confirmed (using the
-pure function `diffNotes`) and sends only the difference, after a short debounce and one batch at a
-time. This means:
-
-- The UI is optimistic by design: changes appear immediately.
-- A burst of changes, such as typing, becomes one request.
-- Changes that cancel out before they are sent, such as delete then undo, send nothing.
-- Retrying needs no special handling: a failed request is still part of the next difference.
-
-The sync engine knows nothing about React. `useNotes` connects the two, and `main.tsx` is the only
-file that knows the API is a mock, so a real backend can be swapped in there.
-
-## Design decisions
-
-**Two ways to create a note.** The requirement to create a note of a given size at a given position
-is met literally by the form in the top bar. A request that would not fit on the board is refused
-with the browser's built-in validation message instead of being adjusted silently. Drawing the note
-is the faster alternative with a mouse.
-
-**The board fits the window.** It does not scroll or zoom, and notes always stay fully inside it,
-including while they are dragged. If the window shrinks, an out-of-bounds note is shown at the
-nearest visible position, but its stored position is kept until the user moves or resizes it, so
-enlarging the window again restores the layout.
-
-**When a drop deletes.** A note is deleted when it is released while any part of it overlaps the
-trash zone. The pointer itself does not have to reach the zone, because a note is held by its top
-edge and covers the zone well before the pointer gets there. A note that already overlaps the zone
-when picked up is the exception, since the smallest move would delete it: for that note the pointer
-must be brought onto the zone, and if the note was grabbed at a point on the zone, that drag cannot
-delete it at all. Because there is no confirmation step, the zone turns red before anything
-happens, Escape cancels the drag, and the deletion can be undone.
-
-**Ids are generated in the browser.** This makes saving an idempotent `PUT /notes/:id`, which is
-what makes retries safe, at the cost of sending the whole note instead of a patch.
-
-**One source of truth for saved data.** The mock server stores its data in `localStorage`, so there
-is no separate local cache that could disagree with the server. Data read from storage is validated
-by `parseNotes`, and malformed entries are dropped.
-
-**No edit is lost on reload.** The mock applies a request as soon as it is sent and delays only the
-response. The app also flushes unsaved changes on `pagehide`, taking requests still in flight into
-account. A real client would get the same guarantee from `fetch` with `keepalive: true`.
-
-## Testing
-
-```sh
-npm test
-```
-
-The unit tests cover the pure logic: geometry, the reducer, parsing stored data, the mock API, the
-diffing and the sync engine (debouncing, batching, failures, retries and the flush on exit). The
-gestures have been checked by hand in current Chrome, Edge and Firefox on macOS, but are not covered
-by automated tests.
-
-## Known limitations and next steps
-
-- **Gesture tests.** The drag interactions need browser-level tests, for example with Playwright.
-- **Keyboard support.** Creating, typing, recoloring, moving and resizing work from the keyboard
-  through the top bar, but deleting still requires a pointer.
-- **Undo.** Only the most recent deletion can be undone; deleting a second note within seven
-  seconds makes the first deletion permanent.
-- **Sync robustness.** The engine retries only when asked or when the next change arrives. A
-  production version would retry automatically with backoff, time out requests and version the
-  notes, so that a late response cannot overwrite newer data.
-- **Multiple tabs.** Two tabs open on the same board overwrite each other note by note instead of
-  merging.
-- **Large boards.** Every note is always in the DOM. That is fine for hundreds of notes, but a board
-  with thousands would need to skip rendering notes that are off screen.
+- Only the pure logic has automated tests. The gestures were tested by hand in Chrome, Edge and
+  Firefox and need browser-level tests, for example with Playwright.
+- Deleting a note requires a pointer, and only the most recent deletion can be undone.
+- Sync has no automatic retry with backoff, no request timeouts and no conflict handling, so two
+  open tabs overwrite each other.
