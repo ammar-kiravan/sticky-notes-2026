@@ -1,0 +1,39 @@
+.top-bar {
+  --picker-ring: var(--chalk);
+  --picker-gap: var(--mat-deep);
+
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 16px;
+  height: 52px;
+  padding: 0 20px;
+  /* The bar is laid out for the narrowest supported window; nothing in it wraps or shrinks. */
+  white-space: nowrap;
+  background: var(--mat-deep);
+  box-shadow: 0 1px 0 rgb(0 0 0 / 0.25);
+}
+
+.top-bar__title {
+  margin: 0;
+  font-family: var(--font-note);
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.top-bar > * {
+  flex: none;
+}
+
+.top-bar__sync {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+  color: var(--chalk-muted);
+}
+
+.top-bar__sync[data-status='failed'] {
+  color: var(--chalk);
+}

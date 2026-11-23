@@ -1,5 +1,4 @@
 :root {
-  /* The board is a cutting mat; everything on it is paper, ink or chalk. */
   --mat: #1f5c53;
   --mat-deep: #174740;
   --mat-shadow: #0f302b;
@@ -15,8 +14,9 @@
   --font-note: 'Shantell Sans Variable', var(--font-ui);
 
   /* Notes stack with small z-index values that grow by one each time a note is raised. */
-  --z-trash: 2147483646;
-  --z-lifted: 2147483647;
+  --z-lifted: 2147483646;
+  /* Above even a note that is being dragged, so that its message is never covered. */
+  --z-trash: 2147483647;
 }
 
 [data-color='yellow'] {
@@ -64,6 +64,8 @@ body {
   font-size: 15px;
   line-height: 1.4;
   -webkit-font-smoothing: antialiased;
+  /* An app surface rather than a document: only the text inside a note can be selected. */
+  user-select: none;
 }
 
 .button {

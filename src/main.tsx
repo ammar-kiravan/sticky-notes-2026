@@ -6,8 +6,7 @@ import { App } from './App';
 import { createMockNotesApi } from './api/mockNotesApi';
 import { createNotesSync } from './sync/notesSync';
 
-// Composition root: a real backend would replace the mock here and nowhere else.
-// Opening the app with `?flaky` makes a third of the requests fail.
+// `?flaky` makes a third of the mocked requests fail.
 const flaky = new URLSearchParams(window.location.search).has('flaky');
 const api = createMockNotesApi({ failureRate: flaky ? 1 / 3 : 0 });
 const sync = createNotesSync(api);

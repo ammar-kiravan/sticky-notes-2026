@@ -1,7 +1,6 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import type { PointerEvent as ReactPointerEvent } from 'react';
-import { flushSync } from 'react-dom';
-import type { Point } from '../domain/geometry';
+import { useEffect, useLayoutEffect, useRef } from 'react';
+import type { PointerEvent as ReactPointerEvent, RefObject } from 'react';
+import type { Point } from '../utils/geometry';
 
 export interface DragSnapshot {
   /** Where the pointer is, in client coordinates. */
@@ -16,7 +15,6 @@ export interface DragHandlers<TContext> {
    * needs to remember until it ends, or `null` to ignore this press.
    */
   onStart(event: ReactPointerEvent<HTMLElement>): TContext | null;
-  /** Called at most once per animation frame while the pointer moves. */
   onMove(context: TContext, drag: DragSnapshot): void;
   onEnd(context: TContext, drag: DragSnapshot): void;
   /** Called when the gesture is abandoned: Escape, a system interruption, or lost capture. */
@@ -25,7 +23,6 @@ export interface DragHandlers<TContext> {
 
 type DragEventHandler = (event: ReactPointerEvent<HTMLElement>) => void;
 
-/** Props to spread onto the element that starts the gesture. */
 export interface DragBindings {
   readonly onPointerDown: DragEventHandler;
   readonly onPointerMove: DragEventHandler;
@@ -40,8 +37,6 @@ interface Session<TContext> {
   readonly origin: Point;
   readonly context: TContext;
   readonly onKeyDown: (event: KeyboardEvent) => void;
-  pointer: Point;
-  frame: number | null;
 }
 
 const PRIMARY_BUTTON = 1;
@@ -52,118 +47,100 @@ const PRIMARY_BUTTON = 1;
  * the element or the window, and no document-level listeners are needed.
  */
 export function usePointerDrag<TContext>(handlers: DragHandlers<TContext>): DragBindings {
-  const handlersRef = useRef(handlers);
   const sessionRef = useRef<Session<TContext> | null>(null);
-
-  // Lets a gesture that is already running call the handlers of the latest render.
+  // The Escape listener is added when a gesture starts, so it reads the handlers through a ref
+  // to get those of the latest render.
+  const handlersRef = useRef(handlers);
   useLayoutEffect(() => {
     handlersRef.current = handlers;
   });
 
-  // Kept in state rather than in a memo: React may discard a memoised value, and a new
-  // controller in the middle of a gesture would abandon it.
-  const [controller] = useState(() => {
-    function stop(): Session<TContext> | null {
-      const session = sessionRef.current;
-      if (!session) return null;
+  // A component that unmounts mid-gesture must not leave its Escape listener behind.
+  useEffect(() => () => void endSession(sessionRef), []);
 
-      sessionRef.current = null;
-      if (session.frame !== null) cancelAnimationFrame(session.frame);
-      window.removeEventListener('keydown', session.onKeyDown);
-      if (session.element.hasPointerCapture(session.pointerId)) {
-        session.element.releasePointerCapture(session.pointerId);
+  const cancel = () => {
+    const session = endSession(sessionRef);
+    if (session) handlersRef.current.onCancel(session.context);
+  };
+
+  const sessionOf = (event: ReactPointerEvent<HTMLElement>) => {
+    const session = sessionRef.current;
+    return session?.pointerId === event.pointerId ? session : null;
+  };
+
+  return {
+    onPointerDown(event) {
+      if (sessionRef.current || event.button !== 0 || !event.isPrimary) return;
+
+      const context = handlers.onStart(event);
+      if (context === null) return;
+
+      event.currentTarget.setPointerCapture(event.pointerId);
+      const onKeyDown = (keyEvent: KeyboardEvent) => {
+        if (keyEvent.key === 'Escape') cancel();
+      };
+      window.addEventListener('keydown', onKeyDown);
+      sessionRef.current = {
+        pointerId: event.pointerId,
+        element: event.currentTarget,
+        origin: { x: event.clientX, y: event.clientY },
+        context,
+        onKeyDown,
+      };
+    },
+
+    onPointerMove(event) {
+      const session = sessionOf(event);
+      if (!session) return;
+
+      // The button is up although no pointerup reached us, which happens when
+      // a context menu or another window swallows it.
+      if ((event.buttons & PRIMARY_BUTTON) === 0) {
+        cancel();
+        return;
       }
-      return session;
-    }
+      handlers.onMove(session.context, snapshot(session, event));
+    },
 
-    function cancel(): void {
-      const session = stop();
-      if (session) handlersRef.current.onCancel(session.context);
-    }
+    onPointerUp(event) {
+      const session = sessionOf(event);
+      if (!session) return;
 
-    function sessionOf(event: ReactPointerEvent<HTMLElement>): Session<TContext> | null {
-      const session = sessionRef.current;
-      return session?.pointerId === event.pointerId ? session : null;
-    }
+      endSession(sessionRef);
+      handlers.onEnd(session.context, snapshot(session, event));
+    },
 
-    const bindings: DragBindings = {
-      onPointerDown(event) {
-        if (sessionRef.current || event.button !== 0 || !event.isPrimary) return;
+    onPointerCancel(event) {
+      if (sessionOf(event)) cancel();
+    },
 
-        const context = handlersRef.current.onStart(event);
-        if (context === null) return;
-
-        event.currentTarget.setPointerCapture(event.pointerId);
-        const onKeyDown = (keyEvent: KeyboardEvent) => {
-          if (keyEvent.key === 'Escape') cancel();
-        };
-        window.addEventListener('keydown', onKeyDown);
-
-        const origin = { x: event.clientX, y: event.clientY };
-        sessionRef.current = {
-          pointerId: event.pointerId,
-          element: event.currentTarget,
-          origin,
-          context,
-          onKeyDown,
-          pointer: origin,
-          frame: null,
-        };
-      },
-
-      onPointerMove(event) {
-        const session = sessionOf(event);
-        if (!session) return;
-
-        // The button is up although no pointerup reached us, which happens when
-        // a context menu or another window swallows it.
-        if ((event.buttons & PRIMARY_BUTTON) === 0) {
-          cancel();
-          return;
-        }
-
-        session.pointer = { x: event.clientX, y: event.clientY };
-        session.frame ??= requestAnimationFrame(() => {
-          session.frame = null;
-          // Rendering synchronously gets the update into this very frame. A state
-          // update merely scheduled from here would be painted one frame late.
-          flushSync(() => handlersRef.current.onMove(session.context, snapshot(session)));
-        });
-      },
-
-      onPointerUp(event) {
-        const session = sessionOf(event);
-        if (!session) return;
-
-        session.pointer = { x: event.clientX, y: event.clientY };
-        stop();
-        handlersRef.current.onEnd(session.context, snapshot(session));
-      },
-
-      onPointerCancel(event) {
-        if (sessionOf(event)) cancel();
-      },
-
-      onLostPointerCapture(event) {
-        if (sessionOf(event)) cancel();
-      },
-    };
-
-    return { bindings, stop };
-  });
-
-  // A component that unmounts mid-gesture must not leave a frame or key listener behind.
-  useEffect(() => () => void controller.stop(), [controller]);
-
-  return controller.bindings;
+    onLostPointerCapture(event) {
+      if (sessionOf(event)) cancel();
+    },
+  };
 }
 
-function snapshot<TContext>(session: Session<TContext>): DragSnapshot {
+function endSession<TContext>(
+  sessionRef: RefObject<Session<TContext> | null>,
+): Session<TContext> | null {
+  const session = sessionRef.current;
+  if (!session) return null;
+
+  // Cleared first, so that the `lostpointercapture` caused by releasing below is ignored.
+  sessionRef.current = null;
+  window.removeEventListener('keydown', session.onKeyDown);
+  if (session.element.hasPointerCapture(session.pointerId)) {
+    session.element.releasePointerCapture(session.pointerId);
+  }
+  return session;
+}
+
+function snapshot<TContext>(
+  session: Session<TContext>,
+  event: ReactPointerEvent<HTMLElement>,
+): DragSnapshot {
   return {
-    pointer: session.pointer,
-    delta: {
-      x: session.pointer.x - session.origin.x,
-      y: session.pointer.y - session.origin.y,
-    },
+    pointer: { x: event.clientX, y: event.clientY },
+    delta: { x: event.clientX - session.origin.x, y: event.clientY - session.origin.y },
   };
 }

@@ -5,20 +5,15 @@ import { parseNotes } from './parseNotes';
 export type KeyValueStorage = Pick<Storage, 'getItem' | 'setItem'>;
 
 export interface MockNotesApiOptions {
-  /** Where the fake server keeps its data. Defaults to `localStorage`. */
   readonly storage?: KeyValueStorage;
   readonly latencyMs?: number;
-  /** Probability (0 to 1) that a request fails; useful for trying out the error handling. */
+  /** Probability, from 0 to 1, that a request fails. */
   readonly failureRate?: number;
 }
 
 const STORAGE_KEY = 'sticky-notes/notes';
 
-/**
- * An in-browser stand-in for the notes backend. It answers asynchronously like
- * a real server would and keeps its "database" in `localStorage`, which is also
- * what makes the notes survive a page reload.
- */
+/** An in-browser stand-in for the notes backend, with `localStorage` as its database. */
 export function createMockNotesApi({
   storage = defaultStorage(),
   latencyMs = 300,
@@ -37,9 +32,8 @@ export function createMockNotesApi({
   }
 
   /**
-   * Handles the request right away and delays only the response. A request
-   * issued while the page is being closed therefore still reaches the "server",
-   * the way `fetch(url, { keepalive: true })` would.
+   * Handles the request at once and delays only the response, so a request sent
+   * while the page closes still lands, as with `fetch(url, { keepalive: true })`.
    */
   function respond<T>(handle: () => T): Promise<T> {
     return new Promise<T>((resolve, reject) => {

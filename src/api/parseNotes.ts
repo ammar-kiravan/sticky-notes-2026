@@ -1,14 +1,11 @@
-import { clamp } from '../domain/geometry';
+import { clamp } from '../utils/geometry';
 import { MIN_NOTE_SIZE, isNoteColor } from '../domain/note';
 import type { Note, NoteId } from '../domain/note';
 
 /** Far above any stacking value the app produces, far below the largest CSS z-index. */
 const MAX_Z = 1_000_000_000;
 
-/**
- * Turns untrusted JSON into notes. Entries that are malformed or repeat an
- * earlier id are dropped, so one bad record cannot take the whole board down.
- */
+/** Turns untrusted JSON into notes, dropping malformed entries and repeated ids. */
 export function parseNotes(value: unknown): Note[] {
   if (!Array.isArray(value)) return [];
 
@@ -44,8 +41,7 @@ function parseNote(value: unknown): Note | null {
     height: Math.max(MIN_NOTE_SIZE.height, height),
     text,
     color,
-    // Used as a CSS z-index, so it has to be a whole number, and a positive one to stay
-    // above the board's surface.
+    // A CSS z-index: whole, and positive to stay above the board's surface.
     z: clamp(Math.round(z), 1, MAX_Z),
   };
 }

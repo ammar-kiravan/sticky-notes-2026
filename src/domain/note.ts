@@ -1,4 +1,4 @@
-import type { Rect, Size } from './geometry';
+import type { Rect, Size } from '../utils/geometry';
 
 export const NOTE_COLORS = ['yellow', 'orange', 'pink', 'purple', 'blue', 'green'] as const;
 
@@ -20,13 +20,6 @@ export const DEFAULT_NOTE_COLOR: NoteColor = 'yellow';
 
 export function isNoteColor(value: unknown): value is NoteColor {
   return NOTE_COLORS.some((color) => color === value);
-}
-
-export function createNoteId(): NoteId {
-  // Not `crypto.randomUUID`: it exists only in secure contexts, so it is missing when the
-  // dev server is opened over plain HTTP from another machine.
-  const bytes = crypto.getRandomValues(new Uint8Array(16));
-  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
 export function notesEqual(a: Note, b: Note): boolean {

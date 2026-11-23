@@ -1,0 +1,44 @@
+.note-form {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--chalk-muted);
+}
+
+.note-form__field {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.note-form__input {
+  width: 48px;
+  height: 28px;
+  padding: 0 4px;
+  border: 1.5px solid rgb(241 247 243 / 0.35);
+  border-radius: 6px;
+  background: rgb(0 0 0 / 0.2);
+  color: var(--chalk);
+  font: inherit;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  /* No spin buttons: the numbers are meant to be typed. */
+  appearance: textfield;
+  user-select: text;
+}
+
+.note-form__input::-webkit-outer-spin-button,
+.note-form__input::-webkit-inner-spin-button {
+  margin: 0;
+  appearance: none;
+}
+
+.note-form__input:focus-visible {
+  outline: 2px solid var(--chalk);
+  outline-offset: 1px;
+}
+
+.note-form__input:user-invalid {
+  border-color: var(--danger);
+}

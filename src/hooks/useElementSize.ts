@@ -1,6 +1,6 @@
 import { useLayoutEffect, useState } from 'react';
 import type { RefObject } from 'react';
-import type { Size } from '../domain/geometry';
+import type { Size } from '../utils/geometry';
 
 /** The element's inner size, kept current with a ResizeObserver. `null` until first measured. */
 export function useElementSize(ref: RefObject<HTMLElement | null>): Size | null {
