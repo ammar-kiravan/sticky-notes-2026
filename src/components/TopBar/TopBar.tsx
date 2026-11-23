@@ -1,6 +1,6 @@
-import type { ReactNode } from 'react';
-import type { SyncStatus } from '../../sync/notesSync';
-import './TopBar.css';
+import type { ReactNode } from "react";
+import type { SyncStatus } from "../../sync/notesSync";
+import "./TopBar.css";
 
 interface TopBarProps {
   /** `null` until the notes have loaded. */
@@ -16,9 +16,9 @@ export function TopBar({ syncStatus, onRetrySync, children }: TopBarProps) {
       {children}
       {/* Not a live region as a whole: the routine states change with every edit. */}
       <div className="top-bar__sync" data-status={syncStatus}>
-        {syncStatus === 'saved' && 'All changes saved'}
-        {syncStatus === 'saving' && 'Saving…'}
-        {syncStatus === 'failed' && (
+        {syncStatus === "saved" && "All changes saved"}
+        {syncStatus === "saving" && "Saving…"}
+        {syncStatus === "failed" && (
           <>
             <span role="alert">Not saved</span>
             <button type="button" className="button" onClick={onRetrySync}>

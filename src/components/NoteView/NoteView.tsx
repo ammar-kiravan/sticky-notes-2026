@@ -1,15 +1,15 @@
-import classNames from 'classnames';
-import { memo } from 'react';
-import type { Dispatch } from 'react';
-import { RESIZE_HANDLES } from '../../utils/geometry';
-import type { Rect, Size } from '../../utils/geometry';
-import type { Note, NoteId } from '../../domain/note';
-import { noteChanged, noteRaised } from '../../state/notes/actions';
-import type { NotesAction } from '../../state/notes/actions';
-import { ColorPicker } from '../ColorPicker/ColorPicker';
-import type { TrashState } from '../TrashZone/TrashZone';
-import { useNoteGestures } from './useNoteGestures';
-import './NoteView.css';
+import classNames from "classnames";
+import { memo } from "react";
+import type { Dispatch } from "react";
+import { RESIZE_HANDLES } from "../../utils/geometry";
+import type { Rect, Size } from "../../utils/geometry";
+import type { Note, NoteId } from "../../domain/note";
+import { noteChanged, noteRaised } from "../../state/notes/actions";
+import type { NotesAction } from "../../state/notes/actions";
+import { ColorPicker } from "../ColorPicker/ColorPicker";
+import type { TrashState } from "../TrashZone/TrashZone";
+import { useNoteGestures } from "./useNoteGestures";
+import "./NoteView.css";
 
 interface NoteViewProps {
   readonly note: Note;
@@ -31,13 +31,14 @@ export const NoteView = memo(function NoteView({
   onSelect,
   onTrashStateChange,
 }: NoteViewProps) {
-  const { rect, phase, overTrash, moveBindings, resizeBindings } = useNoteGestures({
-    note,
-    bounds,
-    trash,
-    dispatch,
-    onTrashStateChange,
-  });
+  const { rect, phase, overTrash, moveBindings, resizeBindings } =
+    useNoteGestures({
+      note,
+      bounds,
+      trash,
+      dispatch,
+      onTrashStateChange,
+    });
 
   const select = () => {
     dispatch(noteRaised(note.id));
@@ -47,11 +48,11 @@ export const NoteView = memo(function NoteView({
   return (
     <article
       className={classNames(
-        'note',
-        selected && 'note--selected',
-        phase === 'moving' && 'note--moving',
-        phase === 'resizing' && 'note--resizing',
-        overTrash && 'note--over-trash',
+        "note",
+        selected && "note--selected",
+        phase === "moving" && "note--moving",
+        phase === "resizing" && "note--resizing",
+        overTrash && "note--over-trash",
       )}
       data-color={note.color}
       aria-label="Note"
@@ -60,13 +61,17 @@ export const NoteView = memo(function NoteView({
         width: rect.width,
         height: rect.height,
         // A moving note is lifted above everything by its class.
-        zIndex: phase === 'moving' ? undefined : note.z,
+        zIndex: phase === "moving" ? undefined : note.z,
       }}
       onPointerDown={select}
       onFocus={select}
     >
       <div className="note__paper">
-        <header className="note__header" title="Drag to move" {...moveBindings} />
+        <header
+          className="note__header"
+          title="Drag to move"
+          {...moveBindings}
+        />
         <textarea
           className="note__text"
           aria-label="Note text"
@@ -74,7 +79,9 @@ export const NoteView = memo(function NoteView({
           // Only takes effect when the note mounts: a new note, or one restored by Undo.
           autoFocus={selected}
           value={note.text}
-          onChange={(event) => dispatch(noteChanged(note.id, { text: event.target.value }))}
+          onChange={(event) =>
+            dispatch(noteChanged(note.id, { text: event.target.value }))
+          }
         />
         <footer className="note__footer">
           <ColorPicker

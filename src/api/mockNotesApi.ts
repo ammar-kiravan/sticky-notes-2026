@@ -1,8 +1,8 @@
-import type { Note } from '../domain/note';
-import type { NotesApi } from './notesApi';
-import { parseNotes } from './parseNotes';
+import type { Note } from "../domain/note";
+import type { NotesApi } from "./notesApi";
+import { parseNotes } from "./parseNotes";
 
-export type KeyValueStorage = Pick<Storage, 'getItem' | 'setItem'>;
+export type KeyValueStorage = Pick<Storage, "getItem" | "setItem">;
 
 export interface MockNotesApiOptions {
   readonly storage?: KeyValueStorage;
@@ -11,7 +11,7 @@ export interface MockNotesApiOptions {
   readonly failureRate?: number;
 }
 
-const STORAGE_KEY = 'sticky-notes/notes';
+const STORAGE_KEY = "sticky-notes/notes";
 
 /** An in-browser stand-in for the notes backend, with `localStorage` as its database. */
 export function createMockNotesApi({
@@ -21,7 +21,7 @@ export function createMockNotesApi({
 }: MockNotesApiOptions = {}): NotesApi {
   function read(): Note[] {
     try {
-      return parseNotes(JSON.parse(storage.getItem(STORAGE_KEY) ?? '[]'));
+      return parseNotes(JSON.parse(storage.getItem(STORAGE_KEY) ?? "[]"));
     } catch {
       return [];
     }
@@ -39,11 +39,13 @@ export function createMockNotesApi({
     return new Promise<T>((resolve, reject) => {
       let settle: () => void;
       try {
-        if (Math.random() < failureRate) throw new Error('Simulated network failure');
+        if (Math.random() < failureRate)
+          throw new Error("Simulated network failure");
         const result = handle();
         settle = () => resolve(result);
       } catch (error) {
-        settle = () => reject(error instanceof Error ? error : new Error(String(error)));
+        settle = () =>
+          reject(error instanceof Error ? error : new Error(String(error)));
       }
       setTimeout(settle, latencyMs);
     });
@@ -59,7 +61,8 @@ export function createMockNotesApi({
         else notes[index] = note;
         write(notes);
       }),
-    remove: (id) => respond(() => write(read().filter((note) => note.id !== id))),
+    remove: (id) =>
+      respond(() => write(read().filter((note) => note.id !== id))),
   };
 }
 

@@ -1,9 +1,11 @@
-import { useLayoutEffect, useState } from 'react';
-import type { RefObject } from 'react';
-import type { Size } from '../utils/geometry';
+import { useLayoutEffect, useState } from "react";
+import type { RefObject } from "react";
+import type { Size } from "../utils/geometry";
 
 /** The element's inner size, kept current with a ResizeObserver. `null` until first measured. */
-export function useElementSize(ref: RefObject<HTMLElement | null>): Size | null {
+export function useElementSize(
+  ref: RefObject<HTMLElement | null>,
+): Size | null {
   const [size, setSize] = useState<Size | null>(null);
 
   useLayoutEffect(() => {
@@ -14,7 +16,9 @@ export function useElementSize(ref: RefObject<HTMLElement | null>): Size | null 
       const width = element.clientWidth;
       const height = element.clientHeight;
       setSize((current) =>
-        current?.width === width && current.height === height ? current : { width, height },
+        current?.width === width && current.height === height
+          ? current
+          : { width, height },
       );
     };
 

@@ -1,11 +1,11 @@
-import { useState } from 'react';
-import type { FormEvent } from 'react';
-import { MIN_NOTE_SIZE } from '../../domain/note';
-import type { NoteColor } from '../../domain/note';
-import { rectsEqual } from '../../utils/geometry';
-import type { Rect, Size } from '../../utils/geometry';
-import { ColorPicker } from '../ColorPicker/ColorPicker';
-import './NoteForm.css';
+import { useState } from "react";
+import type { FormEvent } from "react";
+import { MIN_NOTE_SIZE } from "../../domain/note";
+import type { NoteColor } from "../../domain/note";
+import { rectsEqual } from "../../utils/geometry";
+import type { Rect, Size } from "../../utils/geometry";
+import { ColorPicker } from "../ColorPicker/ColorPicker";
+import "./NoteForm.css";
 
 interface NoteFormProps {
   readonly label: string;
@@ -48,7 +48,12 @@ export function NoteForm({
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    onSubmit({ x: Number(x), y: Number(y), width: Number(width), height: Number(height) });
+    onSubmit({
+      x: Number(x),
+      y: Number(y),
+      width: Number(width),
+      height: Number(height),
+    });
   };
 
   return (
@@ -85,7 +90,11 @@ export function NoteForm({
         max={bounds.height - (Number(height) || MIN_NOTE_SIZE.height)}
         onChange={setY}
       />
-      <ColorPicker label={`${label} color`} value={color} onChange={onColorChange} />
+      <ColorPicker
+        label={`${label} color`}
+        value={color}
+        onChange={onColorChange}
+      />
       <button type="submit" className="button">
         {submitLabel}
       </button>
@@ -102,7 +111,14 @@ interface NumberFieldProps {
   readonly onChange: (value: string) => void;
 }
 
-function NumberField({ shortLabel, label, value, min, max, onChange }: NumberFieldProps) {
+function NumberField({
+  shortLabel,
+  label,
+  value,
+  min,
+  max,
+  onChange,
+}: NumberFieldProps) {
   return (
     <label className="note-form__field" title={`${label}, in pixels`}>
       <span aria-hidden="true">{shortLabel}</span>

@@ -1,9 +1,9 @@
-import type { NotesApi } from '../api/notesApi';
-import type { Note } from '../domain/note';
-import { applyChanges, diffNotes } from './diffNotes';
-import type { NoteChange, ServerNotes } from './diffNotes';
+import type { NotesApi } from "../api/notesApi";
+import type { Note } from "../domain/note";
+import { applyChanges, diffNotes } from "./diffNotes";
+import type { NoteChange, ServerNotes } from "./diffNotes";
 
-export type SyncStatus = 'saved' | 'saving' | 'failed';
+export type SyncStatus = "saved" | "saving" | "failed";
 
 export interface NotesSync {
   /** Fetches the notes and remembers them as what the server holds. */
@@ -37,7 +37,7 @@ export function createNotesSync(
   let sending: readonly NoteChange[] = [];
   /** `null` until the app reports its notes, so that nothing is sent before the first load. */
   let local: readonly Note[] | null = null;
-  let status: SyncStatus = 'saved';
+  let status: SyncStatus = "saved";
   let timer: ReturnType<typeof setTimeout> | undefined;
   const listeners = new Set<() => void>();
 
@@ -52,7 +52,9 @@ export function createNotesSync(
   }
 
   function send(change: NoteChange): Promise<void> {
-    return change.type === 'save' ? api.save(change.note) : api.remove(change.id);
+    return change.type === "save"
+      ? api.save(change.note)
+      : api.remove(change.id);
   }
 
   async function flush(): Promise<void> {
@@ -63,20 +65,22 @@ export function createNotesSync(
     // while a batch was out goes in the next one.
     let changes = unsaved();
     while (changes.length > 0) {
-      setStatus('saving');
+      setStatus("saving");
       sending = changes;
       const results = await Promise.allSettled(changes.map(send));
       sending = [];
 
-      const succeeded = changes.filter((_, index) => results[index]?.status === 'fulfilled');
+      const succeeded = changes.filter(
+        (_, index) => results[index]?.status === "fulfilled",
+      );
       server = applyChanges(server, succeeded);
       if (succeeded.length < changes.length) {
-        setStatus('failed');
+        setStatus("failed");
         return;
       }
       changes = unsaved();
     }
-    setStatus('saved');
+    setStatus("saved");
   }
 
   return {
@@ -93,10 +97,10 @@ export function createNotesSync(
 
       clearTimeout(timer);
       if (unsaved().length === 0) {
-        setStatus('saved');
+        setStatus("saved");
         return;
       }
-      setStatus('saving');
+      setStatus("saving");
       timer = setTimeout(() => void flush(), debounceMs);
     },
 

@@ -19,13 +19,13 @@
     border-color 150ms ease;
 }
 
-.trash-zone[data-state='ready'] {
+.trash-zone[data-state="ready"] {
   border-color: var(--chalk);
   background: var(--mat-deep);
   color: var(--chalk);
 }
 
-.trash-zone[data-state='hover'] {
+.trash-zone[data-state="hover"] {
   border-style: solid;
   border-color: var(--danger);
   background: var(--danger);
@@ -49,6 +49,6 @@
   transition: transform 150ms ease;
 }
 
-.trash-zone[data-state='hover'] .trash-zone__lid {
+.trash-zone[data-state="hover"] .trash-zone__lid {
   transform: rotate(20deg);
 }

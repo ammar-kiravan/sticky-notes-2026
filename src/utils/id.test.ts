@@ -1,8 +1,8 @@
-import { describe, expect, it } from 'vitest';
-import { createId } from './id';
+import { describe, expect, it } from "vitest";
+import { createId } from "./id";
 
-describe('createId', () => {
-  it('produces distinct ids of 32 hex digits', () => {
+describe("createId", () => {
+  it("produces distinct ids of 32 hex digits", () => {
     const ids = Array.from({ length: 200 }, createId);
 
     expect(new Set(ids).size).toBe(ids.length);

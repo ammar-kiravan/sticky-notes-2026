@@ -1,4 +1,4 @@
-import type { Rect, Size } from '../../utils/geometry';
+import type { Rect, Size } from "../../utils/geometry";
 
 const TRASH_ZONE_SIZE: Size = { width: 290, height: 64 };
 const TRASH_ZONE_MARGIN = 20;

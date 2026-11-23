@@ -1,14 +1,14 @@
-import { useMemo, useState } from 'react';
-import type { Dispatch } from 'react';
-import type { Rect, Size } from '../../utils/geometry';
-import type { Note, NoteColor, NoteId } from '../../domain/note';
-import { trashZoneRect } from '../TrashZone/trashZoneRect';
-import type { NotesAction } from '../../state/notes/actions';
-import { NoteCreator } from '../NoteCreator/NoteCreator';
-import { NoteView } from '../NoteView/NoteView';
-import { TrashZone } from '../TrashZone/TrashZone';
-import type { TrashState } from '../TrashZone/TrashZone';
-import './Board.css';
+import { useMemo, useState } from "react";
+import type { Dispatch } from "react";
+import type { Rect, Size } from "../../utils/geometry";
+import type { Note, NoteColor, NoteId } from "../../domain/note";
+import { trashZoneRect } from "../TrashZone/trashZoneRect";
+import type { NotesAction } from "../../state/notes/actions";
+import { NoteCreator } from "../NoteCreator/NoteCreator";
+import { NoteView } from "../NoteView/NoteView";
+import { TrashZone } from "../TrashZone/TrashZone";
+import type { TrashState } from "../TrashZone/TrashZone";
+import "./Board.css";
 
 interface BoardProps {
   readonly notes: readonly Note[];
@@ -31,7 +31,7 @@ export function Board({
 }: BoardProps) {
   // Stable identity, so the memoised notes do not re-render.
   const trash = useMemo(() => trashZoneRect(bounds), [bounds]);
-  const [trashState, setTrashState] = useState<TrashState>('idle');
+  const [trashState, setTrashState] = useState<TrashState>("idle");
 
   return (
     <div className="board">

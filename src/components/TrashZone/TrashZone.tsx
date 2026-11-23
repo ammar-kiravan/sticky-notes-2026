@@ -1,8 +1,8 @@
-import type { Rect } from '../../utils/geometry';
-import './TrashZone.css';
+import type { Rect } from "../../utils/geometry";
+import "./TrashZone.css";
 
 /** `ready` while a note is being dragged, `hover` while releasing it would delete it. */
-export type TrashState = 'idle' | 'ready' | 'hover';
+export type TrashState = "idle" | "ready" | "hover";
 
 interface TrashZoneProps {
   readonly rect: Rect;
@@ -10,9 +10,9 @@ interface TrashZoneProps {
 }
 
 const MESSAGES: Readonly<Record<TrashState, string>> = {
-  idle: 'Drag a note here to delete it',
-  ready: 'Drop here to delete',
-  hover: 'Release to delete',
+  idle: "Drag a note here to delete it",
+  ready: "Drop here to delete",
+  hover: "Release to delete",
 };
 
 export function TrashZone({ rect, state }: TrashZoneProps) {

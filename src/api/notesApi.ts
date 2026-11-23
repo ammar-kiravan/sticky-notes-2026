@@ -1,4 +1,4 @@
-import type { Note, NoteId } from '../domain/note';
+import type { Note, NoteId } from "../domain/note";
 
 /**
  * The REST resource that stores the notes. Ids are generated on the client, so

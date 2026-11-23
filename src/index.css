@@ -10,8 +10,10 @@
   --ink-muted: rgb(28 43 74 / 0.5);
   --danger: #f2513f;
 
-  --font-ui: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --font-note: 'Shantell Sans Variable', var(--font-ui);
+  --font-ui:
+    system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+    sans-serif;
+  --font-note: "Shantell Sans Variable", var(--font-ui);
 
   /* Notes stack with small z-index values that grow by one each time a note is raised. */
   --z-lifted: 2147483646;
@@ -19,22 +21,22 @@
   --z-trash: 2147483647;
 }
 
-[data-color='yellow'] {
+[data-color="yellow"] {
   --paper: #ffe566;
 }
-[data-color='orange'] {
+[data-color="orange"] {
   --paper: #ffbb6b;
 }
-[data-color='pink'] {
+[data-color="pink"] {
   --paper: #ffa3c4;
 }
-[data-color='purple'] {
+[data-color="purple"] {
   --paper: #cbb5ff;
 }
-[data-color='blue'] {
+[data-color="blue"] {
   --paper: #9fd6ff;
 }
-[data-color='green'] {
+[data-color="green"] {
   --paper: #b9ec8f;
 }
 

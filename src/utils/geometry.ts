@@ -10,7 +10,16 @@ export interface Size {
 
 export interface Rect extends Point, Size {}
 
-export const RESIZE_HANDLES = ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw'] as const;
+export const RESIZE_HANDLES = [
+  "n",
+  "ne",
+  "e",
+  "se",
+  "s",
+  "sw",
+  "w",
+  "nw",
+] as const;
 
 export type ResizeHandle = (typeof RESIZE_HANDLES)[number];
 
@@ -45,12 +54,19 @@ export function containsPoint(rect: Rect, point: Point): boolean {
 }
 
 export function rectsEqual(a: Rect, b: Rect): boolean {
-  return a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height;
+  return (
+    a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height
+  );
 }
 
 /** Rects that only touch along an edge do not intersect. */
 export function rectsIntersect(a: Rect, b: Rect): boolean {
-  return a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
+  return (
+    a.x < b.x + b.width &&
+    b.x < a.x + a.width &&
+    a.y < b.y + b.height &&
+    b.y < a.y + a.height
+  );
 }
 
 export function translate(rect: Rect, delta: Point): Rect {
@@ -113,9 +129,24 @@ export function resizeRect(
  * The rect swept out by dragging from `origin` to `pointer`. It stays anchored
  * at the origin, is never smaller than `minSize` and is kept inside `bounds`.
  */
-export function rectFromDrag(origin: Point, pointer: Point, bounds: Size, minSize: Size): Rect {
-  const horizontal = sweepSpan(origin.x, pointer.x, bounds.width, minSize.width);
-  const vertical = sweepSpan(origin.y, pointer.y, bounds.height, minSize.height);
+export function rectFromDrag(
+  origin: Point,
+  pointer: Point,
+  bounds: Size,
+  minSize: Size,
+): Rect {
+  const horizontal = sweepSpan(
+    origin.x,
+    pointer.x,
+    bounds.width,
+    minSize.width,
+  );
+  const vertical = sweepSpan(
+    origin.y,
+    pointer.y,
+    bounds.height,
+    minSize.height,
+  );
   return {
     x: horizontal.start,
     width: horizontal.length,
@@ -149,7 +180,12 @@ function resizeSpan(
   return { start, length };
 }
 
-function sweepSpan(origin: number, pointer: number, limit: number, minLength: number): Span {
+function sweepSpan(
+  origin: number,
+  pointer: number,
+  limit: number,
+  minLength: number,
+): Span {
   const anchor = Math.round(origin);
   const target = clamp(Math.round(pointer), 0, limit);
   const length = Math.max(Math.abs(target - anchor), minLength);

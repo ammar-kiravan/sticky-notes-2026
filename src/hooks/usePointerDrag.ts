@@ -1,6 +1,6 @@
-import { useEffect, useLayoutEffect, useRef } from 'react';
-import type { PointerEvent as ReactPointerEvent, RefObject } from 'react';
-import type { Point } from '../utils/geometry';
+import { useEffect, useLayoutEffect, useRef } from "react";
+import type { PointerEvent as ReactPointerEvent, RefObject } from "react";
+import type { Point } from "../utils/geometry";
 
 export interface DragSnapshot {
   /** Where the pointer is, in client coordinates. */
@@ -37,7 +37,9 @@ interface Session {
  * nothing depends on it: Chrome on a macOS trackpad can drop the capture in the
  * middle of a drag.
  */
-export function usePointerDrag<TContext>(handlers: DragHandlers<TContext>): DragBindings {
+export function usePointerDrag<TContext>(
+  handlers: DragHandlers<TContext>,
+): DragBindings {
   const sessionRef = useRef<Session | null>(null);
   // The window listeners are added when a gesture starts, so they read the handlers through a
   // ref to get those of the latest render.
@@ -58,7 +60,8 @@ export function usePointerDrag<TContext>(handlers: DragHandlers<TContext>): Drag
 
       const { pointerId } = event;
       const origin = { x: event.clientX, y: event.clientY };
-      const isOurs = (pointerEvent: PointerEvent) => pointerEvent.pointerId === pointerId;
+      const isOurs = (pointerEvent: PointerEvent) =>
+        pointerEvent.pointerId === pointerId;
 
       const finish = (pointerEvent: PointerEvent) => {
         endSession(sessionRef);
@@ -82,31 +85,32 @@ export function usePointerDrag<TContext>(handlers: DragHandlers<TContext>): Drag
         if (isOurs(pointerEvent)) cancel();
       };
       const onKeyDown = (keyEvent: KeyboardEvent) => {
-        if (keyEvent.key === 'Escape') cancel();
+        if (keyEvent.key === "Escape") cancel();
       };
       // A context menu or a switch to another window can swallow the pointerup, so either one
       // calls the drag off rather than leave the note stuck to the pointer.
       const onInterrupt = () => cancel();
 
-      window.addEventListener('pointermove', onPointerMove);
-      window.addEventListener('pointerup', onPointerUp);
-      window.addEventListener('pointercancel', onPointerCancel);
-      window.addEventListener('keydown', onKeyDown);
-      window.addEventListener('contextmenu', onInterrupt);
-      window.addEventListener('blur', onInterrupt);
+      window.addEventListener("pointermove", onPointerMove);
+      window.addEventListener("pointerup", onPointerUp);
+      window.addEventListener("pointercancel", onPointerCancel);
+      window.addEventListener("keydown", onKeyDown);
+      window.addEventListener("contextmenu", onInterrupt);
+      window.addEventListener("blur", onInterrupt);
 
       const element = event.currentTarget;
       element.setPointerCapture(pointerId);
 
       sessionRef.current = {
         removeListeners() {
-          window.removeEventListener('pointermove', onPointerMove);
-          window.removeEventListener('pointerup', onPointerUp);
-          window.removeEventListener('pointercancel', onPointerCancel);
-          window.removeEventListener('keydown', onKeyDown);
-          window.removeEventListener('contextmenu', onInterrupt);
-          window.removeEventListener('blur', onInterrupt);
-          if (element.hasPointerCapture(pointerId)) element.releasePointerCapture(pointerId);
+          window.removeEventListener("pointermove", onPointerMove);
+          window.removeEventListener("pointerup", onPointerUp);
+          window.removeEventListener("pointercancel", onPointerCancel);
+          window.removeEventListener("keydown", onKeyDown);
+          window.removeEventListener("contextmenu", onInterrupt);
+          window.removeEventListener("blur", onInterrupt);
+          if (element.hasPointerCapture(pointerId))
+            element.releasePointerCapture(pointerId);
         },
       };
     },

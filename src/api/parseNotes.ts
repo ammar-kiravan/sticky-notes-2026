@@ -1,6 +1,6 @@
-import { clamp } from '../utils/geometry';
-import { MIN_NOTE_SIZE, isNoteColor } from '../domain/note';
-import type { Note, NoteId } from '../domain/note';
+import { clamp } from "../utils/geometry";
+import { MIN_NOTE_SIZE, isNoteColor } from "../domain/note";
+import type { Note, NoteId } from "../domain/note";
 
 /** Far above any stacking value the app produces, far below the largest CSS z-index. */
 const MAX_Z = 1_000_000_000;
@@ -22,9 +22,9 @@ function parseNote(value: unknown): Note | null {
 
   const { id, x, y, width, height, text, color, z } = value;
   const valid =
-    typeof id === 'string' &&
-    id !== '' &&
-    typeof text === 'string' &&
+    typeof id === "string" &&
+    id !== "" &&
+    typeof text === "string" &&
     isNoteColor(color) &&
     isFiniteNumber(x) &&
     isFiniteNumber(y) &&
@@ -47,9 +47,9 @@ function parseNote(value: unknown): Note | null {
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
+  return typeof value === "object" && value !== null;
 }
 
 function isFiniteNumber(value: unknown): value is number {
-  return typeof value === 'number' && Number.isFinite(value);
+  return typeof value === "number" && Number.isFinite(value);
 }

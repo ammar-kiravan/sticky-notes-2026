@@ -1,5 +1,5 @@
-import type { Note } from '../../domain/note';
-import type { NotesAction } from './actions';
+import type { Note } from "../../domain/note";
+import type { NotesAction } from "./actions";
 
 export interface NotesState {
   readonly notes: readonly Note[];
@@ -9,12 +9,15 @@ export interface NotesState {
 
 export const initialNotesState: NotesState = { notes: [], lastRemoved: null };
 
-export function notesReducer(state: NotesState, action: NotesAction): NotesState {
+export function notesReducer(
+  state: NotesState,
+  action: NotesAction,
+): NotesState {
   switch (action.type) {
-    case 'notesLoaded':
+    case "notesLoaded":
       return { notes: action.notes, lastRemoved: null };
 
-    case 'noteAdded': {
+    case "noteAdded": {
       const { x, y, width, height } = action.rect;
       const note: Note = {
         id: action.id,
@@ -22,14 +25,14 @@ export function notesReducer(state: NotesState, action: NotesAction): NotesState
         y,
         width,
         height,
-        text: '',
+        text: "",
         color: action.color,
         z: topZ(state.notes) + 1,
       };
       return { ...state, notes: [...state.notes, note] };
     }
 
-    case 'noteChanged':
+    case "noteChanged":
       return {
         ...state,
         notes: state.notes.map((note) =>
@@ -37,27 +40,33 @@ export function notesReducer(state: NotesState, action: NotesAction): NotesState
         ),
       };
 
-    case 'noteRaised': {
+    case "noteRaised": {
       const target = state.notes.find((note) => note.id === action.id);
       if (!target || isOnTop(target, state.notes)) return state;
       const raised = { ...target, z: topZ(state.notes) + 1 };
-      return { ...state, notes: state.notes.map((note) => (note === target ? raised : note)) };
+      return {
+        ...state,
+        notes: state.notes.map((note) => (note === target ? raised : note)),
+      };
     }
 
-    case 'noteRemoved': {
+    case "noteRemoved": {
       const removed = state.notes.find((note) => note.id === action.id);
       if (!removed) return state;
-      return { notes: state.notes.filter((note) => note !== removed), lastRemoved: removed };
+      return {
+        notes: state.notes.filter((note) => note !== removed),
+        lastRemoved: removed,
+      };
     }
 
-    case 'removalUndone': {
+    case "removalUndone": {
       if (!state.lastRemoved) return state;
       // Other notes may have been raised since the removal, so the old `z` could collide.
       const restored = { ...state.lastRemoved, z: topZ(state.notes) + 1 };
       return { notes: [...state.notes, restored], lastRemoved: null };
     }
 
-    case 'undoDismissed':
+    case "undoDismissed":
       return state.lastRemoved ? { ...state, lastRemoved: null } : state;
   }
 }

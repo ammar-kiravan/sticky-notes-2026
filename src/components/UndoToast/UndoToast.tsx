@@ -1,5 +1,5 @@
-import { useEffect, useEffectEvent } from 'react';
-import './UndoToast.css';
+import { useEffect, useEffectEvent } from "react";
+import "./UndoToast.css";
 
 interface UndoToastProps {
   readonly onUndo: () => void;

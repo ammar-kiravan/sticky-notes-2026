@@ -34,6 +34,6 @@
   color: var(--chalk-muted);
 }
 
-.top-bar__sync[data-status='failed'] {
+.top-bar__sync[data-status="failed"] {
   color: var(--chalk);
 }

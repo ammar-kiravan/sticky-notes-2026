@@ -1,11 +1,11 @@
-import { useState } from 'react';
-import type { PointerEvent } from 'react';
-import { rectFromDrag } from '../../utils/geometry';
-import type { Point, Rect, Size } from '../../utils/geometry';
-import { MIN_NOTE_SIZE } from '../../domain/note';
-import type { NoteColor } from '../../domain/note';
-import { usePointerDrag } from '../../hooks/usePointerDrag';
-import './NoteCreator.css';
+import { useState } from "react";
+import type { PointerEvent } from "react";
+import { rectFromDrag } from "../../utils/geometry";
+import type { Point, Rect, Size } from "../../utils/geometry";
+import { MIN_NOTE_SIZE } from "../../domain/note";
+import type { NoteColor } from "../../domain/note";
+import { usePointerDrag } from "../../hooks/usePointerDrag";
+import "./NoteCreator.css";
 
 interface NoteCreatorProps {
   readonly bounds: Size;
@@ -18,7 +18,12 @@ interface NoteCreatorProps {
 const DRAW_THRESHOLD_PX = 4;
 
 /** The empty surface of the board, on which a drag draws a new note. */
-export function NoteCreator({ bounds, color, onPress, onCreate }: NoteCreatorProps) {
+export function NoteCreator({
+  bounds,
+  color,
+  onPress,
+  onCreate,
+}: NoteCreatorProps) {
   const [preview, setPreview] = useState<Rect | null>(null);
 
   const drawnRect = (origin: Point, delta: Point): Rect | null => {

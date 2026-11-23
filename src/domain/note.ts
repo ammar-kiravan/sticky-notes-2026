@@ -1,6 +1,13 @@
-import type { Rect, Size } from '../utils/geometry';
+import type { Rect, Size } from "../utils/geometry";
 
-export const NOTE_COLORS = ['yellow', 'orange', 'pink', 'purple', 'blue', 'green'] as const;
+export const NOTE_COLORS = [
+  "yellow",
+  "orange",
+  "pink",
+  "purple",
+  "blue",
+  "green",
+] as const;
 
 export type NoteColor = (typeof NOTE_COLORS)[number];
 
@@ -16,7 +23,7 @@ export interface Note extends Rect {
 
 export const MIN_NOTE_SIZE: Size = { width: 160, height: 120 };
 export const DEFAULT_NOTE_SIZE: Size = { width: 220, height: 200 };
-export const DEFAULT_NOTE_COLOR: NoteColor = 'yellow';
+export const DEFAULT_NOTE_COLOR: NoteColor = "yellow";
 
 export function isNoteColor(value: unknown): value is NoteColor {
   return NOTE_COLORS.some((color) => color === value);
