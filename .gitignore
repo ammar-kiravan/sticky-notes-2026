@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+
+# Build
+dist/
+dist-ssr/
+*.local
+
+# Vite
+.vite/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Test / coverage
+coverage/
+*.lcov
+
+# TypeScript
+*.tsbuildinfo
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.swp
+*.swo
+*~
+
+# Optional tooling caches
+.cache/
+.eslintcache
+.stylelintcache
+.prettiercache
+.turbo/
+.parcel-cache/

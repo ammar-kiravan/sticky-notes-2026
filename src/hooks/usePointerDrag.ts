@@ -17,130 +17,112 @@ export interface DragHandlers<TContext> {
   onStart(event: ReactPointerEvent<HTMLElement>): TContext | null;
   onMove(context: TContext, drag: DragSnapshot): void;
   onEnd(context: TContext, drag: DragSnapshot): void;
-  /** Called when the gesture is abandoned: Escape, a system interruption, or lost capture. */
+  /** Called when the gesture is abandoned: Escape, a context menu, leaving the window, or pointercancel. */
   onCancel(context: TContext): void;
 }
 
-type DragEventHandler = (event: ReactPointerEvent<HTMLElement>) => void;
-
 export interface DragBindings {
-  readonly onPointerDown: DragEventHandler;
-  readonly onPointerMove: DragEventHandler;
-  readonly onPointerUp: DragEventHandler;
-  readonly onPointerCancel: DragEventHandler;
-  readonly onLostPointerCapture: DragEventHandler;
+  readonly onPointerDown: (event: ReactPointerEvent<HTMLElement>) => void;
 }
 
-interface Session<TContext> {
-  readonly pointerId: number;
-  readonly element: HTMLElement;
-  readonly origin: Point;
-  readonly context: TContext;
-  readonly onKeyDown: (event: KeyboardEvent) => void;
+interface Session {
+  readonly removeListeners: () => void;
 }
-
-const PRIMARY_BUTTON = 1;
 
 /**
- * The one drag primitive behind moving, resizing and drawing notes. The element
- * captures the pointer, so the gesture keeps working when the pointer leaves
- * the element or the window, and no document-level listeners are needed.
+ * The one drag primitive behind moving, resizing and drawing notes. Once a
+ * gesture starts, it follows the pointer through listeners on `window`, which
+ * keep receiving the events wherever the pointer goes. Pointer capture is also
+ * requested, so that other elements show no hover effects during the drag, but
+ * nothing depends on it: Chrome on a macOS trackpad can drop the capture in the
+ * middle of a drag.
  */
 export function usePointerDrag<TContext>(handlers: DragHandlers<TContext>): DragBindings {
-  const sessionRef = useRef<Session<TContext> | null>(null);
-  // The Escape listener is added when a gesture starts, so it reads the handlers through a ref
-  // to get those of the latest render.
+  const sessionRef = useRef<Session | null>(null);
+  // The window listeners are added when a gesture starts, so they read the handlers through a
+  // ref to get those of the latest render.
   const handlersRef = useRef(handlers);
   useLayoutEffect(() => {
     handlersRef.current = handlers;
   });
 
-  // A component that unmounts mid-gesture must not leave its Escape listener behind.
+  // A component that unmounts mid-gesture must not leave its listeners behind.
   useEffect(() => () => void endSession(sessionRef), []);
-
-  const cancel = () => {
-    const session = endSession(sessionRef);
-    if (session) handlersRef.current.onCancel(session.context);
-  };
-
-  const sessionOf = (event: ReactPointerEvent<HTMLElement>) => {
-    const session = sessionRef.current;
-    return session?.pointerId === event.pointerId ? session : null;
-  };
 
   return {
     onPointerDown(event) {
       if (sessionRef.current || event.button !== 0 || !event.isPrimary) return;
 
-      const context = handlers.onStart(event);
+      const context = handlersRef.current.onStart(event);
       if (context === null) return;
 
-      event.currentTarget.setPointerCapture(event.pointerId);
+      const { pointerId } = event;
+      const origin = { x: event.clientX, y: event.clientY };
+      const isOurs = (pointerEvent: PointerEvent) => pointerEvent.pointerId === pointerId;
+
+      const finish = (pointerEvent: PointerEvent) => {
+        endSession(sessionRef);
+        handlersRef.current.onEnd(context, snapshot(origin, pointerEvent));
+      };
+      const cancel = () => {
+        endSession(sessionRef);
+        handlersRef.current.onCancel(context);
+      };
+
+      // Only pointerup ends a drag. The `buttons` of a move are not trusted: Chrome on a macOS
+      // trackpad can report the button as up for a moment while the finger is still pressing.
+      const onPointerMove = (pointerEvent: PointerEvent) => {
+        if (isOurs(pointerEvent))
+          handlersRef.current.onMove(context, snapshot(origin, pointerEvent));
+      };
+      const onPointerUp = (pointerEvent: PointerEvent) => {
+        if (isOurs(pointerEvent)) finish(pointerEvent);
+      };
+      const onPointerCancel = (pointerEvent: PointerEvent) => {
+        if (isOurs(pointerEvent)) cancel();
+      };
       const onKeyDown = (keyEvent: KeyboardEvent) => {
         if (keyEvent.key === 'Escape') cancel();
       };
+      // A context menu or a switch to another window can swallow the pointerup, so either one
+      // calls the drag off rather than leave the note stuck to the pointer.
+      const onInterrupt = () => cancel();
+
+      window.addEventListener('pointermove', onPointerMove);
+      window.addEventListener('pointerup', onPointerUp);
+      window.addEventListener('pointercancel', onPointerCancel);
       window.addEventListener('keydown', onKeyDown);
+      window.addEventListener('contextmenu', onInterrupt);
+      window.addEventListener('blur', onInterrupt);
+
+      const element = event.currentTarget;
+      element.setPointerCapture(pointerId);
+
       sessionRef.current = {
-        pointerId: event.pointerId,
-        element: event.currentTarget,
-        origin: { x: event.clientX, y: event.clientY },
-        context,
-        onKeyDown,
+        removeListeners() {
+          window.removeEventListener('pointermove', onPointerMove);
+          window.removeEventListener('pointerup', onPointerUp);
+          window.removeEventListener('pointercancel', onPointerCancel);
+          window.removeEventListener('keydown', onKeyDown);
+          window.removeEventListener('contextmenu', onInterrupt);
+          window.removeEventListener('blur', onInterrupt);
+          if (element.hasPointerCapture(pointerId)) element.releasePointerCapture(pointerId);
+        },
       };
-    },
-
-    onPointerMove(event) {
-      const session = sessionOf(event);
-      if (!session) return;
-
-      // The button is up although no pointerup reached us, which happens when
-      // a context menu or another window swallows it.
-      if ((event.buttons & PRIMARY_BUTTON) === 0) {
-        cancel();
-        return;
-      }
-      handlers.onMove(session.context, snapshot(session, event));
-    },
-
-    onPointerUp(event) {
-      const session = sessionOf(event);
-      if (!session) return;
-
-      endSession(sessionRef);
-      handlers.onEnd(session.context, snapshot(session, event));
-    },
-
-    onPointerCancel(event) {
-      if (sessionOf(event)) cancel();
-    },
-
-    onLostPointerCapture(event) {
-      if (sessionOf(event)) cancel();
     },
   };
 }
 
-function endSession<TContext>(
-  sessionRef: RefObject<Session<TContext> | null>,
-): Session<TContext> | null {
+function endSession(sessionRef: RefObject<Session | null>): void {
   const session = sessionRef.current;
-  if (!session) return null;
-
-  // Cleared first, so that the `lostpointercapture` caused by releasing below is ignored.
+  if (!session) return;
   sessionRef.current = null;
-  window.removeEventListener('keydown', session.onKeyDown);
-  if (session.element.hasPointerCapture(session.pointerId)) {
-    session.element.releasePointerCapture(session.pointerId);
-  }
-  return session;
+  session.removeListeners();
 }
 
-function snapshot<TContext>(
-  session: Session<TContext>,
-  event: ReactPointerEvent<HTMLElement>,
-): DragSnapshot {
+function snapshot(origin: Point, event: PointerEvent): DragSnapshot {
   return {
     pointer: { x: event.clientX, y: event.clientY },
-    delta: { x: event.clientX - session.origin.x, y: event.clientY - session.origin.y },
+    delta: { x: event.clientX - origin.x, y: event.clientY - origin.y },
   };
 }
